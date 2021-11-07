@@ -3,7 +3,6 @@ from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
 
-
 def initializeWeights(n_in, n_out):
     """
     # initializeWeights return the random weights for Neural Network given the
@@ -25,6 +24,7 @@ def initializeWeights(n_in, n_out):
 def sigmoid(z):
     """# Notice that z can be a scalar, a vector or a matrix
     # return the sigmoid of input z"""
+    # Your code here.
     return  1 / (1 + np.exp(-z));
 
 
@@ -55,8 +55,41 @@ def preprocess():
 
     # Split the training sets into two sets of 50000 randomly sampled training examples and 10000 validation examples. 
     # Your code here.
-    
+    test_label = np.empty(len(mat['test0']))
+    test_label.fill(0)
+    test_data = mat['test0']
 
+    for x in range(1, 10):
+      keys = 'test' + str(x)
+      temp = np.empty(len(mat[keys]))
+      temp.fill(x)
+      test_label = np.concatenate((test_label, temp), axis=None)
+      test_data = np.vstack(test_data, mat[keys])
+
+    # every first 100 will be validation samples
+    validation_label = np.empty(100)
+    validation_label.fill(0)
+    validation_data = mat['train0'][:100]
+
+    for x in range(1, 10):
+      keys = 'train' + str(x)
+      temp = np.empty(100)
+      temp.fill(x)
+      validation_label = np.concatenate((validation_label, temp), axis=None)
+      validation_data = np.vstack(validation_data, mat[keys][:100])
+
+    # rest rows will all serve as training samples
+    train_label = np.empty(len(mat['train0']) - 100)
+    train_label = np.fill(0)
+    train_data = mat['train0'][100:]
+
+    for x in range(1, 10):
+      keys = 'train' + str(x)
+      temp = np.empty(len(mat[keys]) - 100)
+      temp.fill(x)
+      train_label = np.concatenate((train_label, temp), axis=None)
+      train_data = np.vstack(train_data, mat[keys][100:])
+      
     # Feature selection
     # Your code here.
 
