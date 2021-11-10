@@ -151,11 +151,25 @@ def nnObjFunction(params, *args):
     z = np.c_(z, ones(len(z)))
     output = sigmoid(z @ np.transpose(w2))
 
+    y_label = []
+    for label in train_label:
+      yi = np.zeros(10)
+      yi[int(label)] = 1
+      y_label.append(yi)
+    
+    n = len(train_label)
+
+    J_i = -np.sum(y_label * np.log(output) + (-(y_label-1))*np.log(-(output-1)), axis=1) 
+    
+    obj_val = - np.sum(y_label * np.log(output) + (-(y_label-1))*np.log(-(output-1))) / n
+
+    obj_grad = np.sum(np.gradient(J_i), axis=1) / n
+
 
     # Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
     # you would use code similar to the one below to create a flat array
     # obj_grad = np.concatenate((grad_w1.flatten(), grad_w2.flatten()),0)
-    obj_grad = np.array([])
+    # obj_grad = np.array([])
 
     return (obj_val, obj_grad)
 

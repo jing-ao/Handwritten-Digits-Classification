@@ -17,22 +17,22 @@ def initializeWeights(n_in,n_out):
                             
     # Output: 
     # W: matrix of random initial weights with size (n_out x (n_in + 1))"""
-    epsilon = sqrt(6) / sqrt(n_in + n_out + 1);
-    W = (np.random.rand(n_out, n_in + 1)*2* epsilon) - epsilon;
+    epsilon = np.sqrt(6) / np.sqrt(n_in + n_out + 1)
+    W = (np.random.rand(n_out, n_in + 1)*2* epsilon) - epsilon
     return W
 
 
 
 # Replace this with your sigmoid implementation
 def sigmoid(z):
-    
+    pass
     
 # Replace this with your nnObjFunction implementation
 def nnObjFunction(params, *args):
-    
+    pass
 # Replace this with your nnPredict implementation
 def nnPredict(w1,w2,data):
-
+    pass
 # Do not change this
 def preprocess():
     pickle_obj = pickle.load(file=open('face_all.pickle', 'rb'))
