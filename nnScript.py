@@ -68,28 +68,28 @@ def preprocess():
       test_data = np.vstack((test_data, mat[keys]))
 
     # every first 100 will be validation samples
-    validation_label = np.empty(100)
+    validation_label = np.empty(1000)
     validation_label.fill(0)
-    validation_data = mat['train0'][:100]
+    validation_data = mat['train0'][:1000]
 
     for x in range(1, 10):
       keys = 'train' + str(x)
-      temp = np.empty(100)
+      temp = np.empty(1000)
       temp.fill(x)
       validation_label = np.concatenate((validation_label, temp), axis=None)
-      validation_data = np.vstack((validation_data, mat[keys][:100]))
+      validation_data = np.vstack((validation_data, mat[keys][:1000]))
 
     # rest rows will all serve as training samples
-    train_label = np.empty(len(mat['train0']) - 100)
+    train_label = np.empty(len(mat['train0']) - 1000)
     train_label.fill(0)
-    train_data = mat['train0'][100:]
+    train_data = mat['train0'][1000:]
 
     for x in range(1, 10):
       keys = 'train' + str(x)
-      temp = np.empty(len(mat[keys]) - 100)
+      temp = np.empty(len(mat[keys]) - 1000)
       temp.fill(x)
       train_label = np.concatenate((train_label, temp), axis=None)
-      train_data = np.vstack((train_data, mat[keys][100:]))
+      train_data = np.vstack((train_data, mat[keys][1000:]))
 
     # Feature selection
     # Your code here.
@@ -179,7 +179,7 @@ def nnPredict(w1, w2, data):
     % label: a column vector of predicted labels
     """
 
-    labels = np.array([])
+    labels = np.zeros(len(data))
     # Your code here
     data = np.c_(data, ones(len(data)))
     z = sigmoid(data @ np.transpose(w1))
@@ -196,7 +196,7 @@ train_data, train_label, validation_data, validation_label, test_data, test_labe
 #  Train Neural Network
 
 # set the number of nodes in input unit (not including bias unit)
-n_input = train_data.shape[1]
+n_input = train_data.shape[1] #784
 
 # set the number of nodes in hidden unit (not including bias unit)
 n_hidden = 50
