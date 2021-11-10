@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.core.numeric import ones
 from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
@@ -25,7 +26,7 @@ def sigmoid(z):
     """# Notice that z can be a scalar, a vector or a matrix
     # return the sigmoid of input z"""
     # Your code here.
-    return  1 / (1 + np.exp(-z));
+    return  1 / (1 + np.exp(-z))
 
 
 def preprocess():
@@ -145,7 +146,10 @@ def nnObjFunction(params, *args):
     obj_val = 0
 
     # Your code here
-
+    training_data = np.c_(training_data, ones(len(training_data)))
+    z = sigmoid(training_data @ np.transpose(w1))
+    z = np.c_(z, ones(len(z)))
+    output = sigmoid(z @ np.transpose(w2))
 
 
     # Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
@@ -177,7 +181,11 @@ def nnPredict(w1, w2, data):
 
     labels = np.array([])
     # Your code here
-
+    data = np.c_(data, ones(len(data)))
+    z = sigmoid(data @ np.transpose(w1))
+    z = np.c_(z, ones(len(z)))
+    output = sigmoid(z @ np.transpose(w2))
+    labels = np.argmax(output, axis= 1)
     return labels
 
 
