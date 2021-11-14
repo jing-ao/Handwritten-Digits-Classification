@@ -90,7 +90,6 @@ def preprocess():
       temp.fill(x)
       train_label = np.concatenate((train_label, temp), axis=None)
       train_data = np.vstack((train_data, mat[keys][1000:]))
-
     # Feature selection
     # Your code here.
 
@@ -146,30 +145,41 @@ def nnObjFunction(params, *args):
     obj_val = 0
 
     # Your code here
-    training_data = np.c_(training_data, ones(len(training_data)))
+    training_data = np.c_[training_data, ones(len(training_data))]
     z = sigmoid(training_data @ np.transpose(w1))
-    z = np.c_(z, ones(len(z)))
+    z = np.c_[z, ones(len(z))]
+    print(z.shape)
     output = sigmoid(z @ np.transpose(w2))
-
-    y_label = []
+    
+    y_label = np.empty(10)
     for label in train_label:
       yi = np.zeros(10)
       yi[int(label)] = 1
-      y_label.append(yi)
+      y_label = np.vstack((y_label, yi))
     
-    n = len(train_label)
+    n = len(training_label)
+    obj_val = -1 * np.sum(y_label * np.log(output) + ([1-y for y in y_label])*np.log([1-out for out in output])) / n
 
-    J_i = -np.sum(y_label * np.log(output) + (-(y_label-1))*np.log(-(output-1)), axis=1) 
+    print('obj_val:',obj_val)
+
+    theta = output - y_label
+    grad_w2 = np.zeros((10,51))
+    for i in range(n):
+      grad_w2 = grad_w2 + theta[i].T @ z[i]
+    grad_w2 = grad_w2 / n
+    print(grad_w2.shape)
+    grad_w1 = np.zeros(50, 785)
+
+    # for i in range(n):
+    #   -1 * (z[i] - 1) * z[i] * (theta[i] @ w2)
     
-    obj_val = - np.sum(y_label * np.log(output) + (-(y_label-1))*np.log(-(output-1))) / n
 
-    obj_grad = np.sum(np.gradient(J_i), axis=1) / n
-
-
+    obj_grad = np.array([])
+    obj_grad = np.concatenate((grad_w1.flatten(), grad_w2.flatten()),0)
     # Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
     # you would use code similar to the one below to create a flat array
     # obj_grad = np.concatenate((grad_w1.flatten(), grad_w2.flatten()),0)
-    # obj_grad = np.array([])
+    
 
     return (obj_val, obj_grad)
 
@@ -195,9 +205,9 @@ def nnPredict(w1, w2, data):
 
     labels = np.zeros(len(data))
     # Your code here
-    data = np.c_(data, ones(len(data)))
+    data = np.c_[data, ones(len(data))]
     z = sigmoid(data @ np.transpose(w1))
-    z = np.c_(z, ones(len(z)))
+    z = np.c_[z, ones(len(z))]
     output = sigmoid(z @ np.transpose(w2))
     labels = np.argmax(output, axis= 1)
     return labels
@@ -231,9 +241,8 @@ lambdaval = 0
 args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
 
 # Train Neural Network using fmin_cg or minimize from scipy,optimize module. Check documentation for a working example
-
+# nnObjFunction(initialWeights, n_input, n_hidden, n_class, train_data, train_label, lambdaval)
 opts = {'maxiter': 50}  # Preferred value.
-
 nn_params = minimize(nnObjFunction, initialWeights, jac=True, args=args, method='CG', options=opts)
 
 # In Case you want to use fmin_cg, you may have to split the nnObjectFunction to two functions nnObjFunctionVal
