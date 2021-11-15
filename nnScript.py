@@ -26,7 +26,11 @@ def sigmoid(z):
     """# Notice that z can be a scalar, a vector or a matrix
     # return the sigmoid of input z"""
     # Your code here.
+    # if z>=0:
     return  1 / (1 + np.exp(-z))
+    # # prevent exp overflow
+    # else:
+    #   return np.exp(z) / (1 + np.exp(z))
 
 
 def preprocess():
@@ -148,31 +152,41 @@ def nnObjFunction(params, *args):
     training_data = np.c_[training_data, ones(len(training_data))]
     z = sigmoid(training_data @ np.transpose(w1))
     z = np.c_[z, ones(len(z))]
-    print(z.shape)
     output = sigmoid(z @ np.transpose(w2))
-    
-    y_label = np.empty(10)
-    for label in train_label:
-      yi = np.zeros(10)
-      yi[int(label)] = 1
-      y_label = np.vstack((y_label, yi))
-    
+
     n = len(training_label)
-    obj_val = -1 * np.sum(y_label * np.log(output) + ([1-y for y in y_label])*np.log([1-out for out in output])) / n
+    y_label = np.zeros((50000, 10))
+    for i in range(n):
+      y_label[i][int(training_label[i])] = 1
+    #obj_val = -1 * np.sum(y_label * np.log(output) + (1-y_label)*np.log(1-output)) / n
+    obj_val = (-1/n)*np.sum(y_label * np.log(output) + (1-y_label)*np.log(1-output)) + (lambdaval/(2*n))*(np.sum(w1**2) + np.sum(w2**2))
 
     print('obj_val:',obj_val)
 
     theta = output - y_label
     grad_w2 = np.zeros((10,51))
     for i in range(n):
-      grad_w2 = grad_w2 + theta[i].T @ z[i]
+      tmp_theta = theta[i].reshape((10,1))
+      tmp_z = z[i].reshape((1,51))
+      grad_w2 = grad_w2 + np.dot(tmp_theta,tmp_z)
+      
     grad_w2 = grad_w2 / n
-    print(grad_w2.shape)
-    grad_w1 = np.zeros(50, 785)
+    print('grad_w2:', grad_w2.shape)
 
-    # for i in range(n):
-    #   -1 * (z[i] - 1) * z[i] * (theta[i] @ w2)
-    
+
+    grad_w1 = np.zeros((50, 785))
+    for i in range(n):
+      tmp_z = (1-z[i][:50])*z[i][:50]
+      tmp_z = tmp_z.reshape((50,1))
+      tmp_theta = theta[i].reshape((1,10))
+      tmp = tmp_theta @ w2
+      tmp = tmp.reshape((51,1))
+      tmp_j = tmp_z * (tmp[:50])
+      tmp_x = training_data[i].reshape((1,785))
+      grad_w1 = grad_w1 + np.dot(tmp_j, tmp_x)
+
+    grad_w1 = grad_w1 / n
+    print('grad_w1', grad_w1.shape)
 
     obj_grad = np.array([])
     obj_grad = np.concatenate((grad_w1.flatten(), grad_w2.flatten()),0)
