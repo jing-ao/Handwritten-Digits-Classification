@@ -155,7 +155,7 @@ def nnObjFunction(params, *args):
     output = sigmoid(z @ np.transpose(w2))
 
     n = len(training_label)
-    y_label = np.zeros((50000, 10))
+    y_label = np.zeros((n, n_class))
     for i in range(n):
       y_label[i][int(training_label[i])] = 1
     #obj_val = -1 * np.sum(y_label * np.log(output) + (1-y_label)*np.log(1-output)) / n
@@ -164,25 +164,25 @@ def nnObjFunction(params, *args):
     print('obj_val:',obj_val)
 
     theta = output - y_label
-    grad_w2 = np.zeros((10,51))
+    grad_w2 = np.zeros((n_class, n_hidden + 1))
     for i in range(n):
-      tmp_theta = theta[i].reshape((10,1))
-      tmp_z = z[i].reshape((1,51))
+      tmp_theta = theta[i].reshape((n_class,1))
+      tmp_z = z[i].reshape((1, n_hidden + 1))
       grad_w2 = grad_w2 + np.dot(tmp_theta,tmp_z)
       
     grad_w2 = grad_w2 / n
     print('grad_w2:', grad_w2.shape)
 
 
-    grad_w1 = np.zeros((50, 785))
+    grad_w1 = np.zeros((n_hidden, n_input + 1))
     for i in range(n):
-      tmp_z = (1-z[i][:50])*z[i][:50]
-      tmp_z = tmp_z.reshape((50,1))
-      tmp_theta = theta[i].reshape((1,10))
+      tmp_z = (1-z[i][:n_hidden])*z[i][:n_hidden]
+      tmp_z = tmp_z.reshape((n_hidden,1))
+      tmp_theta = theta[i].reshape((1, n_class))
       tmp = tmp_theta @ w2
-      tmp = tmp.reshape((51,1))
-      tmp_j = tmp_z * (tmp[:50])
-      tmp_x = training_data[i].reshape((1,785))
+      tmp = tmp.reshape((n_hidden + 1,1))
+      tmp_j = tmp_z * (tmp[:n_hidden])
+      tmp_x = training_data[i].reshape((1, n_input + 1))
       grad_w1 = grad_w1 + np.dot(tmp_j, tmp_x)
 
     grad_w1 = grad_w1 / n
