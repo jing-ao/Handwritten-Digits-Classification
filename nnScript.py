@@ -3,6 +3,7 @@ from numpy.core.numeric import ones
 from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
+import pickle
 
 def initializeWeights(n_in, n_out):
     """
@@ -164,29 +165,19 @@ def nnObjFunction(params, *args):
     print('obj_val:',obj_val)
 
     theta = output - y_label
-    grad_w2 = np.zeros((n_class, n_hidden + 1))
-    for i in range(n):
-      tmp_theta = theta[i].reshape((n_class,1))
-      tmp_z = z[i].reshape((1, n_hidden + 1))
-      grad_w2 = grad_w2 + np.dot(tmp_theta,tmp_z)
-      
+    grad_w2 = theta.T @ z
     grad_w2 = grad_w2 / n
-    print('grad_w2:', grad_w2.shape)
+    #print('grad_w2:', grad_w2.shape)
 
-
-    grad_w1 = np.zeros((n_hidden, n_input + 1))
-    for i in range(n):
-      tmp_z = (1-z[i][:n_hidden])*z[i][:n_hidden]
-      tmp_z = tmp_z.reshape((n_hidden,1))
-      tmp_theta = theta[i].reshape((1, n_class))
-      tmp = tmp_theta @ w2
-      tmp = tmp.reshape((n_hidden + 1,1))
-      tmp_j = tmp_z * (tmp[:n_hidden])
-      tmp_x = training_data[i].reshape((1, n_input + 1))
-      grad_w1 = grad_w1 + np.dot(tmp_j, tmp_x)
+    z = np.delete(z, -1, axis=1)
+    tmp_z = (1-z) * z
+    tmp_w2 = np.delete(w2, -1, axis=1)
+    tmp = theta @ tmp_w2
+    tmp_p = (tmp_z * tmp)
+    grad_w1 = tmp_p.T @ training_data
 
     grad_w1 = grad_w1 / n
-    print('grad_w1', grad_w1.shape)
+    #print('grad_w1', grad_w1.shape)
 
     obj_grad = np.array([])
     obj_grad = np.concatenate((grad_w1.flatten(), grad_w2.flatten()),0)
@@ -237,7 +228,7 @@ train_data, train_label, validation_data, validation_label, test_data, test_labe
 n_input = train_data.shape[1] #784
 
 # set the number of nodes in hidden unit (not including bias unit)
-n_hidden = 50
+n_hidden = 20
 
 # set the number of nodes in output unit
 n_class = 10
@@ -250,40 +241,49 @@ initial_w2 = initializeWeights(n_hidden, n_class)
 initialWeights = np.concatenate((initial_w1.flatten(), initial_w2.flatten()), 0)
 
 # set the regularization hyper-parameter
-lambdaval = 0
 
-args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
 
 # Train Neural Network using fmin_cg or minimize from scipy,optimize module. Check documentation for a working example
 # nnObjFunction(initialWeights, n_input, n_hidden, n_class, train_data, train_label, lambdaval)
 opts = {'maxiter': 50}  # Preferred value.
-nn_params = minimize(nnObjFunction, initialWeights, jac=True, args=args, method='CG', options=opts)
 
-# In Case you want to use fmin_cg, you may have to split the nnObjectFunction to two functions nnObjFunctionVal
-# and nnObjGradient. Check documentation for this function before you proceed.
-# nn_params, cost = fmin_cg(nnObjFunctionVal, initialWeights, nnObjGradient,args = args, maxiter = 50)
+for lambdaval in range(40,41):
+  print('#################################################################################################################')
+  print(f'##lambda = {lambdaval}#############################')
+  print('#################################################################################################################')
+
+  args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
+
+  nn_params = minimize(nnObjFunction, initialWeights, jac=True, args=args, method='CG', options=opts)
+
+  # In Case you want to use fmin_cg, you may have to split the nnObjectFunction to two functions nnObjFunctionVal
+  # and nnObjGradient. Check documentation for this function before you proceed.
+  # nn_params, cost = fmin_cg(nnObjFunctionVal, initialWeights, nnObjGradient,args = args, maxiter = 50)
 
 
-# Reshape nnParams from 1D vector into w1 and w2 matrices
-w1 = nn_params.x[0:n_hidden * (n_input + 1)].reshape((n_hidden, (n_input + 1)))
-w2 = nn_params.x[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
+  # Reshape nnParams from 1D vector into w1 and w2 matrices
+  w1 = nn_params.x[0:n_hidden * (n_input + 1)].reshape((n_hidden, (n_input + 1)))
+  w2 = nn_params.x[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
 
-# Test the computed parameters
+  # Test the computed parameters
 
-predicted_label = nnPredict(w1, w2, train_data)
+  predicted_label = nnPredict(w1, w2, train_data)
 
-# find the accuracy on Training Dataset
+  # find the accuracy on Training Dataset
 
-print('\n Training set Accuracy:' + str(100 * np.mean((predicted_label == train_label).astype(float))) + '%')
+  print('\n Training set Accuracy:' + str(100 * np.mean((predicted_label == train_label).astype(float))) + '%')
 
-predicted_label = nnPredict(w1, w2, validation_data)
+  predicted_label = nnPredict(w1, w2, validation_data)
 
-# find the accuracy on Validation Dataset
+  # find the accuracy on Validation Dataset
 
-print('\n Validation set Accuracy:' + str(100 * np.mean((predicted_label == validation_label).astype(float))) + '%')
+  print('\n Validation set Accuracy:' + str(100 * np.mean((predicted_label == validation_label).astype(float))) + '%')
 
-predicted_label = nnPredict(w1, w2, test_data)
+  predicted_label = nnPredict(w1, w2, test_data)
 
-# find the accuracy on Validation Dataset
+  # find the accuracy on Validation Dataset
 
-print('\n Test set Accuracy:' + str(100 * np.mean((predicted_label == test_label).astype(float))) + '%')
+  print('\n Test set Accuracy:' + str(100 * np.mean((predicted_label == test_label).astype(float))) + '%')
+selected_feature = np.arange(784)
+parameter_list = [selected_feature, n_hidden, w1, w2, lambdaval]
+pickle.dump(parameter_list, open("params.pickle", "wb"))
